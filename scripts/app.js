@@ -1,104 +1,125 @@
-const fetchWeatherData = async () => {
-  const response = await fetch(
-    "https://api.openweathermap.org/data/2.5/weather?lat=37.9575&lon=121.2925&units=imperial&appid=cf7f1c8560a924e6048763d33c150642"
-  );
-  const data = await response.json();
-  console.log(Math.floor(data.main.temp_max));
-  console.log(Math.floor(data.main.temp_min));
-  return data;
-};
+// --- VARIABLES ---
+let favorites = []; 
+const saveBtn = document.getElementById('saveBtn');
+const favoritesList = document.getElementById('favoritesList');
+const cityNameDisplay = document.getElementById('city-name');
+const searchInput = document.getElementById('searchInput');
 
-fetchWeatherData();
 
-// --- FUNCTION 2: Weekly Forecast ---
-const fetchWeeklyData = async () => {
-  console.log("Fetching weekly forecast...");
-  const response = await fetch(
-    "https://api.openweathermap.org/data/2.5/forecast?lat=37.9575&lon=121.2925&units=imperial&appid=cf7f1c8560a924e6048763d33c150642"
-  );
-  const data = await response.json();
+const fetchWeatherData = async (city = 'Stockton') => {
+    // 1. Fetch the data
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
+    const response = await fetch(url);
+    const data = await response.json();
 
-  console.log("✅ Weekly Data Received:", data);
-  console.log("--- Logging Temps for Upcoming Days ---");
+    console.log("✅ Current Weather:", data);
 
-  console.log("Day 1 Temp:", Math.floor(data.list[0].main.temp) + "°");
-  console.log("Day 1 Max:", Math.floor(data.list[0].main.temp_max) + "°");
-  console.log("Day 1 Min:", Math.floor(data.list[0].main.temp_min) + "°");
-  console.log("-");
-
-  console.log("Day 2 Temp:", Math.floor(data.list[8].main.temp) + "°");
-  console.log("Day 2 Max:", Math.floor(data.list[8].main.temp_max) + "°");
-  console.log("Day 2 Min:", Math.floor(data.list[8].main.temp_min) + "°");
-  console.log("-");
-
-  console.log("Day 3 Temp:", Math.floor(data.list[16].main.temp) + "°");
-  console.log("Day 3 Max:", Math.floor(data.list[16].main.temp_max) + "°");
-  console.log("Day 3 Min:", Math.floor(data.list[16].main.temp_min) + "°");
-  console.log("-");
-
-  console.log("Day 4 Temp:", Math.floor(data.list[24].main.temp) + "°");
-  console.log("Day 4 Max:", Math.floor(data.list[24].main.temp_max) + "°");
-  console.log("Day 4 Min:", Math.floor(data.list[24].main.temp_min) + "°");
-  console.log("-");
-
-  console.log("Day 5 Temp:", Math.floor(data.list[32].main.temp) + "°");
-  console.log("Day 5 Max:", Math.floor(data.list[32].main.temp_max) + "°");
-  console.log("Day 5 Min:", Math.floor(data.list[32].main.temp_min) + "°");
-  console.log("---------------------------------------");
-
-  return data;
-};
-fetchWeeklyData();
-// --- FAVORITES FEATURE ---
-let favorites = [];
-const saveBtn = document.getElementById("saveBtn");
-const favoritesList = document.getElementById("favoritesList");
-const cityNameDisplay = document.getElementById("city-name");
-
-saveBtn.addEventListener("click", () => {
-  const currentCity = cityNameDisplay.childNodes[0].textContent.trim();
-
-  if (!favorites.includes(currentCity)) {
-    favorites.push(currentCity);
-    renderFavorites();
-    saveBtn.classList.add("active");
-  } else {
-    alert("City is already in favorites!");
-  }
-});
-
-const Favorites = () => {
-  favoritesList.innerHTML = "";
-
-  favorites.forEach((city) => {
-    let li = document.createElement("li");
-    li.className = "fav-item";
-
-    let textSpan = document.createElement("span");
-    textSpan.textContent = city;
-
-    let deleteBtn = document.createElement("span");
-    deleteBtn.className = "delete-btn";
-    deleteBtn.textContent = "X";
-
-    deleteBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      removeFavorite(city);
+    // 2. Update the HTML
+    cityNameDisplay.innerHTML = `${data.name} <button id="saveBtn" class="star-btn">★</button>`;
+    
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        const currentCity = data.name;
+        if (!favorites.includes(currentCity)) {
+            favorites.push(currentCity);
+            renderFavorites();
+            document.getElementById('saveBtn').classList.add('active'); 
+        } else {
+            alert("City is already in favorites!");
+        }
     });
 
-    li.appendChild(textSpan);
-    li.appendChild(deleteBtn);
+    // Update Temperatures
+    document.getElementById('current-temp').innerText = Math.round(data.main.temp) + "°";
+    document.getElementById('maxTemp').innerText = Math.round(data.main.temp_max) + "° H";
+    document.getElementById('minTemp').innerText = Math.round(data.main.temp_min) + "° L";
 
-    favoritesList.appendChild(li);
-  });
+    // Update Date
+    const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', dateOptions);
+
+    return data;
 };
 
+
+// --- FUNCTION 2: Get Weekly Forecast ---
+const fetchWeeklyData = async (city = 'Stockton') => {
+    console.log(`Fetching weekly forecast for ${city}...`);
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=imperial`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log("✅ Weekly Data Received:", data);
+
+    console.log("--- Upcoming Days ---");
+    console.log("Day 1 Temp:", Math.floor(data.list[0].main.temp) + "°");
+    console.log("Day 2 Temp:", Math.floor(data.list[8].main.temp) + "°");
+    console.log("Day 3 Temp:", Math.floor(data.list[16].main.temp) + "°");
+    console.log("Day 4 Temp:", Math.floor(data.list[24].main.temp) + "°");
+    console.log("Day 5 Temp:", Math.floor(data.list[32].main.temp) + "°");
+    console.log("---------------------");
+
+    return data;
+};
+
+
+// --- FAVORITES FEATURE ---
+
+// Render the list
+const Favorites = () => {
+    favoritesList.innerHTML = "";
+
+    favorites.forEach(city => {
+        let li = document.createElement('li');
+        li.className = 'fav-item';
+
+        let textSpan = document.createElement('span');
+        textSpan.textContent = city;
+        
+        let deleteBtn = document.createElement('span');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = 'X';
+
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeFavorite(city); 
+        });
+
+        li.addEventListener('click', () => {
+            fetchWeatherData(city);
+            fetchWeeklyData(city);
+        });
+
+        li.appendChild(textSpan);
+        li.appendChild(deleteBtn);
+        favoritesList.appendChild(li);
+    });
+};
+
+// Remove a favorite
 const removeFavorite = (city) => {
-  favorites = favorites.filter((item) => item !== city);
-  renderFavorites();
-
-  const currentCity = cityNameDisplay.childNodes[0].textContent.trim();
-  if (currentCity === city) {
-    saveBtn.classList.remove("active");
-  }
+    favorites = favorites.filter(item => item !== city);
+    Favorites();
+    
+    // Check if element exists 
+    if(cityNameDisplay && cityNameDisplay.childNodes[0]) {
+        const currentCity = cityNameDisplay.childNodes[0].textContent.trim();
+        if (currentCity === city) {
+            const btn = document.getElementById('saveBtn');
+            if(btn) btn.classList.remove('active');
+        }
+    }
 };
+
+// --- SEARCH BAR ---
+searchInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+        const cityToSearch = searchInput.value;
+        fetchWeatherData(cityToSearch);
+        fetchWeeklyData(cityToSearch);
+        searchInput.value = ''; // Clear bar
+    }
+});
+
+
+fetchWeatherData();
+fetchWeeklyData();
