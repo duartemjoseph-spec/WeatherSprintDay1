@@ -1,34 +1,43 @@
+import { apiKey } from './environment.js';
+
 // --- VARIABLES ---
 let favorites = []; 
 const saveBtn = document.getElementById('saveBtn');
-const favoritesList = document.getElementById('favoritesList');
+const favoritesList = document.getElementById('favoritesList'); 
 const cityNameDisplay = document.getElementById('city-name');
 const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
 
 
+// --- FUNCTION 1: Get Current Weather ---
 const fetchWeatherData = async (city = 'Stockton') => {
-    // 1. Fetch the data
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
     const response = await fetch(url);
     const data = await response.json();
 
     console.log("✅ Current Weather:", data);
 
-    // 2. Update the HTML
+    // Update the HTML
     cityNameDisplay.innerHTML = `${data.name} <button id="saveBtn" class="star-btn">★</button>`;
     
+    if (favorites.includes(data.name)) {
+        document.getElementById('saveBtn').classList.add('active');
+    }
+
+    // Add Click Listener to the new Star Button
     document.getElementById('saveBtn').addEventListener('click', () => {
         const currentCity = data.name;
+        
         if (!favorites.includes(currentCity)) {
             favorites.push(currentCity);
-            renderFavorites();
+            Favorites(); 
             document.getElementById('saveBtn').classList.add('active'); 
         } else {
             alert("City is already in favorites!");
         }
     });
 
-    // Update Temperatures
+    // Update Temps
     document.getElementById('current-temp').innerText = Math.round(data.main.temp) + "°";
     document.getElementById('maxTemp').innerText = Math.round(data.main.temp_max) + "° H";
     document.getElementById('minTemp').innerText = Math.round(data.main.temp_min) + "° L";
@@ -49,22 +58,11 @@ const fetchWeeklyData = async (city = 'Stockton') => {
     const data = await response.json();
 
     console.log("✅ Weekly Data Received:", data);
-
-    console.log("--- Upcoming Days ---");
-    console.log("Day 1 Temp:", Math.floor(data.list[0].main.temp) + "°");
-    console.log("Day 2 Temp:", Math.floor(data.list[8].main.temp) + "°");
-    console.log("Day 3 Temp:", Math.floor(data.list[16].main.temp) + "°");
-    console.log("Day 4 Temp:", Math.floor(data.list[24].main.temp) + "°");
-    console.log("Day 5 Temp:", Math.floor(data.list[32].main.temp) + "°");
-    console.log("---------------------");
-
     return data;
 };
 
 
 // --- FAVORITES FEATURE ---
-
-// Render the list
 const Favorites = () => {
     favoritesList.innerHTML = "";
 
@@ -79,11 +77,11 @@ const Favorites = () => {
         deleteBtn.className = 'delete-btn';
         deleteBtn.textContent = 'X';
 
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        deleteBtn.addEventListener('click', () => {
             removeFavorite(city); 
         });
 
+        // Click list item to load that city
         li.addEventListener('click', () => {
             fetchWeatherData(city);
             fetchWeeklyData(city);
@@ -91,18 +89,16 @@ const Favorites = () => {
 
         li.appendChild(textSpan);
         li.appendChild(deleteBtn);
-        favoritesList.appendChild(li);
+        favoritesList.appendChild(li); 
     });
 };
 
 // Remove a favorite
 const removeFavorite = (city) => {
     favorites = favorites.filter(item => item !== city);
-    Favorites();
-    
-    // Check if element exists 
-    if(cityNameDisplay && cityNameDisplay.childNodes[0]) {
-        const currentCity = cityNameDisplay.childNodes[0].textContent.trim();
+    Favorites(); 
+        if(cityNameDisplay && cityNameDisplay.childNodes[0]) {
+        const currentCity = cityNameDisplay.childNodes[0].textContent();
         if (currentCity === city) {
             const btn = document.getElementById('saveBtn');
             if(btn) btn.classList.remove('active');
@@ -110,14 +106,61 @@ const removeFavorite = (city) => {
     }
 };
 
-// --- SEARCH BAR ---
+const loadCity = (city) => {
+    fetchWeatherData(city);
+    fetchWeeklyData(city);
+};
+
+// --- EVENT LISTENERS ---
 searchInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
         const cityToSearch = searchInput.value;
         fetchWeatherData(cityToSearch);
         fetchWeeklyData(cityToSearch);
-        searchInput.value = ''; // Clear bar
+        searchInput.value = ''; 
     }
+});
+
+searchBtn.addEventListener('click', () => {
+    const cityToSearch = searchInput.value;
+    fetchWeatherData(cityToSearch);
+    fetchWeeklyData(cityToSearch);
+    searchInput.value = ''; 
+});
+
+// --- GEOLOCATION ---
+const output = document.getElementById('output');
+window.addEventListener("DOMContentLoaded", () => {
+    if (!navigator.geolocation) {
+        output.textContent = "Geolocation is not supported by your browser.";
+        return;
+    }
+    output.textContent = "Getting your location...";
+    navigator.geolocation.getCurrentPosition(
+        // Success callback
+        (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+            output.textContent = `Lat: ${latitude}, Long: ${longitude}`;
+        },
+        // Error callback
+        (error) => {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    output.textContent = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    output.textContent = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    output.textContent = "The request to get user location timed out.";
+                    break;
+                default:
+                    output.textContent = "An unknown error occurred.";
+            }
+        }
+    );
 });
 
 

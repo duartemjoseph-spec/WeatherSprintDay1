@@ -126,10 +126,11 @@ body {
 .star-btn {
     background: none;
     border: none;
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: rgba(255, 255, 255, 0.5);  
     cursor: pointer;
     transition: color 0.3s;
+    line-height: 1;
 }
 
 .star-btn.active {
