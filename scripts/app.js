@@ -186,13 +186,7 @@ searchBtn.addEventListener('click', () => {
     }
 });
 
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && searchInput.value) {
-        fetchWeatherData(searchInput.value);
-        fetchWeeklyData(searchInput.value);
-        searchInput.value = '';
-    }
-});
+
 
 // Star Button Listener
 saveBtn.addEventListener('click', addFavorite);
