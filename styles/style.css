@@ -167,3 +167,8 @@ body {
     cursor: pointer;
     padding: 0 10px;
 }
+.output {
+    color: white;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
