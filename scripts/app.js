@@ -1,43 +1,43 @@
 import { apiKey } from './environment.js';
 
 // --- VARIABLES ---
-let favorites = []; // Start empty every time (No Local Storage)
+let favorites = []; 
 let currentCityName = ""; 
 
-const saveBtn = document.getElementById('saveBtn'); // The Star Button
+const saveBtn = document.getElementById('saveBtn'); 
 const favoritesList = document.getElementById('favoritesList'); 
 const cityNameDisplay = document.getElementById('city-name');
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const output = document.getElementById('output'); 
 
+const grabCurrentDate = () => {
+    const currentDate = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return currentDate.toLocaleDateString('en-US', options);
+};
+
 // --- FUNCTION 1: Get Current Weather (By City Name) ---
-const fetchWeatherData = async (city = 'Stockton') => {
+const fetchWeatherData = async (city = '----') => {
+    if(output) output.textContent = '';
     try {
         const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
         const response = await fetch(url);
         const data = await response.json();
-
-        if (data.cod !== 200) {
-            alert("City not found. Please try again.");
-            return;
-        }
-
+        
+        
         console.log("✅ Current Weather (City):", data);
-
-        // --- THE HUGE BLOCK (Paste #1) ---
         // 1. Update the Variable
         currentCityName = data.name;
 
         // 2. Update the HTML Text
         cityNameDisplay.innerText = data.name;
-        document.getElementById('current-temp').innerText = Math.round(data.main.temp) + "°";
-        document.getElementById('maxTemp').innerText = Math.round(data.main.temp_max) + "° H";
-        document.getElementById('minTemp').innerText = Math.round(data.main.temp_min) + "° L";
+        document.getElementById('current-temp').innerText = Math.floor(data.main.temp) + "°";
+        document.getElementById('maxTemp').innerText = Math.floor(data.main.temp_max) + "° H";
+        document.getElementById('minTemp').innerText = Math.floor(data.main.temp_min) + "° L";
 
         // 3. Update Date
-        const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', dateOptions);
+        document.getElementById('current-date').innerText = grabCurrentDate();
 
         // 4. Update the Star (Check if this city is in favorites)
         updateStarButton(); 
@@ -49,7 +49,7 @@ const fetchWeatherData = async (city = 'Stockton') => {
 };
 
 // --- FUNCTION 2: Get Weekly Forecast (By City Name) ---
-const fetchWeeklyData = async (city = 'Stockton') => {
+const fetchWeeklyData = async (city = '----') => {
     try {
         const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=imperial`;
         const response = await fetch(url);
@@ -76,20 +76,17 @@ const getWeatherByCoords = async (lat, lon) => {
 
         console.log("✅ Current Weather (Location):", data);
 
-        // --- THE HUGE BLOCK (Paste #2) ---
         // 1. Update the Variable
         currentCityName = data.name;
 
         // 2. Update the HTML Text
         cityNameDisplay.innerText = data.name;
-        document.getElementById('current-temp').innerText = Math.round(data.main.temp) + "°";
-        document.getElementById('maxTemp').innerText = Math.round(data.main.temp_max) + "° H";
-        document.getElementById('minTemp').innerText = Math.round(data.main.temp_min) + "° L";
+        document.getElementById('current-temp').innerText = Math.floor(data.main.temp) + "°";
+        document.getElementById('maxTemp').innerText = Math.floor(data.main.temp_max) + "° H";
+        document.getElementById('minTemp').innerText = Math.floor(data.main.temp_min) + "° L";
 
         // 3. Update Date
-        const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', dateOptions);
-
+        document.getElementById('current-date').innerText = grabCurrentDate();
         // 4. Update the Star
         updateStarButton();
         // ---------------------------------
@@ -185,15 +182,19 @@ searchBtn.addEventListener('click', () => {
         searchInput.value = '';
     }
 });
-
+searchInput.addEventListener('keypress', (event) => {
+    if (event.key === "Enter") {
+        searchBtn.click(); 
+    }
+});
 
 
 // Star Button Listener
 saveBtn.addEventListener('click', addFavorite);
 
 document.getElementById('homeBtn').addEventListener('click', () => {
-    fetchWeatherData('');
-    fetchWeeklyData('');
+    fetchWeatherData('----');
+    fetchWeeklyData('----');
 });
 
 // --- START UP (GEOLOCATION) ---
@@ -214,7 +215,7 @@ window.addEventListener("DOMContentLoaded", () => {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
-            if(output) output.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+            if(output) output.textContent = `Lat: ${Math.floor(lat)}, Lon: ${Math.floor(lon)}`;
             
             getWeatherByCoords(lat, lon);
         },
